@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PhoneBot Transcript Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h1 { color: #333; }
+    .controls { margin-bottom: 20px; }
+    .lead { background: white; padding: 15px; margin-bottom: 15px; border-left: 5px solid #888; }
+    .lead.positive { border-color: green; }
+    .lead.negative { border-color: red; }
+    .transcript { margin-top: 10px; font-size: 14px; }
+    .step { margin-bottom: 8px; }
+    .sentiment { font-weight: bold; padding-left: 5px; }
+    button, select { margin-right: 10px; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <h1>📊 PhoneBot Lead Transcript Viewer</h1>
+
+  <div class="controls">
+    <button onclick="exportToCSV()">📄 Export CSV</button>
+    <button onclick="window.print()">🖨️ Print Page</button>
+    <select onchange="filterBySentiment(this.value)">
+      <option value="all">Show All</option>
+      <option value="positive">Positive Only</option>
+      <option value="negative">Negative Only</option>
+    </select>
+    <input type="text" id="search" placeholder="Search keyword..." oninput="filterByKeyword(this.value)">
+  </div>
+
+  <div id="dashboard"></div>
+
+  <script>
+    let rawLeads = [];
+
+    async function loadTranscripts() {
+      const res = await fetch('/transcripts');
+      rawLeads = await res.json();
+      renderLeads(rawLeads);
+    }
+
+    function renderLeads(leads) {
+      const container = document.getElementById('dashboard');
+      container.innerHTML = '';
+
+      leads.forEach(lead => {
+        const wrapper = document.createElement('div');
+        const avgSentiment = lead.transcript.reduce((acc, t) => acc + (t.sentiment || 0), 0) / lead.transcript.length;
+        wrapper.className = 'lead ' + (avgSentiment > 1 ? 'positive' : avgSentiment < -1 ? 'negative' : '');
+
+        wrapper.innerHTML = `
+          <h2>${lead.transcript[0]?.name || 'Unknown'} — <small>${new Date(lead.timestamp).toLocaleString()}</small></h2>
+          <div class="transcript">
+            ${lead.transcript.map(t => `
+              <div class="step">
+                <strong>${t.step}</strong>: "${t.speech}"<span class="sentiment">[${t.sentiment}]</span>
+              </div>`).join('')}
+          </div>
+        `;
+        container.appendChild(wrapper);
+      });
+    }
+
+    function exportToCSV() {
+      let csv = 'Name,Timestamp,Step,Speech,Sentiment\n';
+      rawLeads.forEach(lead => {
+        const name = lead.transcript[0]?.name || 'Unknown';
+        const time = new Date(lead.timestamp).toLocaleString();
+        lead.transcript.forEach(t => {
+          csv += `${name},${time},${t.step},"${t.speech}",${t.sentiment}\n`;
+        });
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'phonebot_transcripts.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function filterBySentiment(type) {
+      if (type === 'all') return renderLeads(rawLeads);
+      const filtered = rawLeads.filter(lead => {
+        const avg = lead.transcript.reduce((acc, t) => acc + t.sentiment, 0) / lead.transcript.length;
+        return type === 'positive' ? avg > 1 : avg < -1;
+      });
+      renderLeads(filtered);
+    }
+
+    function filterByKeyword(keyword) {
+      const filtered = rawLeads.filter(lead =>
+        lead.transcript.some(t => t.speech.toLowerCase().includes(keyword.toLowerCase()))
+      );
+      renderLeads(filtered);
+    }
+
+    loadTranscripts();
+    setInterval(loadTranscripts, 5000);
+  </script>
+</body>
+</html>
