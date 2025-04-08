@@ -96,8 +96,9 @@ app.post('/interest', (req, res) => {
   if (speech.includes('call') || speech.includes('later')) scheduleCallback(name, phone);
   if (speech.includes('appointment') || speech.includes('schedule')) offerCalendlyBooking(name, phone);
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/goals', method: 'POST' });
+  const gather = twiml.gather({ input: 'speech', action: '/goals', method: 'POST', timeout: 5, speechTimeout: 'auto' });
   gather.say('What line of work are you in currently?');
+  twiml.say("Sorry, I didn’t catch that. We’ll follow up later.");
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -105,8 +106,9 @@ app.post('/goals', (req, res) => {
   const speech = req.body.SpeechResult || 'unknown';
   saveTranscriptStep('goals', speech);
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/retire', method: 'POST' });
+  const gather = twiml.gather({ input: 'speech', action: '/retire', method: 'POST', timeout: 5, speechTimeout: 'auto' });
   gather.say('Is this a career or a stepping stone?');
+  twiml.say("Thank you. We’ll be in touch.");
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -114,8 +116,9 @@ app.post('/retire', (req, res) => {
   const speech = req.body.SpeechResult || 'not stated';
   saveTranscriptStep('retire', speech);
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/income', method: 'POST' });
+  const gather = twiml.gather({ input: 'speech', action: '/income', method: 'POST', timeout: 5, speechTimeout: 'auto' });
   gather.say('What is your ideal income?');
+  twiml.say("Got it. Thank you for your time.");
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -123,8 +126,9 @@ app.post('/income', (req, res) => {
   const speech = req.body.SpeechResult || 'not provided';
   saveTranscriptStep('income', speech);
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/final-save', method: 'POST' });
+  const gather = twiml.gather({ input: 'speech', action: '/final-save', method: 'POST', timeout: 5, speechTimeout: 'auto' });
   gather.say('How long will it take to reach that income?');
+  twiml.say("We’ll circle back soon. Goodbye!");
   res.type('text/xml').send(twiml.toString());
 });
 
