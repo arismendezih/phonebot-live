@@ -72,13 +72,21 @@ function saveTranscriptStep(step, speech, meta = {}) {
 app.post('/voice', (req, res) => {
   const { name = 'there', ref = 'a friend', phone = '' } = req.query;
   const twiml = new VoiceResponse();
+
   const gather = twiml.gather({
     input: 'speech',
     action: `https://phonebot-live.onrender.com/interest?name=${name}&phone=${phone}`,
-    method: 'POST'
+    method: 'POST',
+    timeout: 5,
+    speechTimeout: 'auto'
   });
+
   gather.say(`Hi ${name}, this is Isidro. You were referred by ${ref}. Do you want to save money, make money, or eliminate debt?`);
-  res.type('text/xml').send(twiml.toString());
+
+  twiml.say("Sorry, I didn’t hear anything. We’ll call you back soon. Goodbye!");
+
+  res.type('text/xml');
+  res.send(twiml.toString());
 });
 
 app.post('/interest', (req, res) => {
