@@ -70,89 +70,86 @@ function saveTranscriptStep(step, speech, meta = {}) {
 }
 
 app.post('/voice', (req, res) => {
-  const { name = 'there', ref = 'a friend', phone = '' } = req.query;
+  const { phone = '' } = req.query;
   const twiml = new VoiceResponse();
-
-  const gather = twiml.gather({
-    input: 'speech',
-    action: `https://phonebot-live.onrender.com/interest?name=${name}&phone=${phone}`,
-    method: 'POST',
-    timeout: 5,
-    speechTimeout: 'auto'
-  });
-
-  gather.say({ voice: 'man', language: 'en-US' }, `Hi ${name}, this is Isidro. You were referred by ${ref}. Do you want to save money, make money, or eliminate debt?`);
-
-  twiml.say({ voice: 'man', language: 'en-US' }, "Sorry, I didn’t hear anything. We’ll call you back soon. Goodbye!");
-
-  res.type('text/xml');
-  res.send(twiml.toString());
-});
-
-app.post('/interest', (req, res) => {
-  const speech = req.body.SpeechResult || 'unknown';
-  const { name, phone } = req.query;
-  saveTranscriptStep('interest', speech, { name, phone });
-  if (speech.includes('call') || speech.includes('later')) scheduleCallback(name, phone);
-  if (speech.includes('appointment') || speech.includes('schedule')) offerCalendlyBooking(name, phone);
-  const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/goals', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say({ voice: 'man', language: 'en-US' }, 'What line of work are you in currently?');
-  twiml.say({ voice: 'man', language: 'en-US' }, "Sorry, I didn’t catch that. We’ll follow up later.");
+  const gather = twiml.gather({ input: 'speech', action: '/gather-name', method: 'POST', timeout: 5, speechTimeout: 'auto' });
+  gather.say({ voice: 'man', language: 'en-US' }, 'Hi, this is Isidro. Let’s get started. What is your full name?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "Sorry, I didn’t hear anything. We'll follow up soon. Goodbye!");
   res.type('text/xml').send(twiml.toString());
 });
 
-app.post('/goals', (req, res) => {
-  const speech = req.body.SpeechResult || 'unknown';
-  saveTranscriptStep('goals', speech);
+app.post('/gather-name', (req, res) => {
+  const speech = req.body.SpeechResult || 'not captured';
+  saveTranscriptStep('name', speech);
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/retire', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say({ voice: 'man', language: 'en-US' }, 'Is this a career or a stepping stone?');
-  twiml.say({ voice: 'man', language: 'en-US' }, "Thank you. We’ll be in touch.");
+  const gather = twiml.gather({ input: 'speech', action: '/gather-location', method: 'POST', timeout: 5, speechTimeout: 'auto' });
+  gather.say({ voice: 'man', language: 'en-US' }, 'Thanks. What city or location are you in?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "Got it. We’ll contact you soon.");
   res.type('text/xml').send(twiml.toString());
 });
 
-app.post('/retire', (req, res) => {
-  const speech = req.body.SpeechResult || 'not stated';
-  saveTranscriptStep('retire', speech);
+app.post('/gather-location', (req, res) => {
+  const speech = req.body.SpeechResult || 'not captured';
+  saveTranscriptStep('location', speech);
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: '/income', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say({ voice: 'man', language: 'en-US' }, 'What is your ideal income?');
-  twiml.say({ voice: 'man', language: 'en-US' }, "Got it. Thank you for your time.");
+  const gather = twiml.gather({ input: 'speech', action: '/gather-job', method: 'POST', timeout: 5, speechTimeout: 'auto' });
+  gather.say({ voice: 'man', language: 'en-US' }, 'What do you do for work right now?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "Understood. We’ll follow up shortly.");
   res.type('text/xml').send(twiml.toString());
 });
 
-app.post('/income', (req, res) => {
-  const speech = req.body.SpeechResult || 'not provided';
+app.post('/gather-job', (req, res) => {
+  const speech = req.body.SpeechResult || 'not captured';
+  saveTranscriptStep('job', speech);
+  const twiml = new VoiceResponse();
+  const gather = twiml.gather({ input: 'speech', action: '/gather-priority', method: 'POST', timeout: 5, speechTimeout: 'auto' });
+  gather.say({ voice: 'man', language: 'en-US' }, 'Which is most important to you right now: saving money, making money, or eliminating debt?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "Thanks for sharing. We'll be in touch.");
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.post('/gather-priority', (req, res) => {
+  const speech = req.body.SpeechResult || 'not captured';
+  saveTranscriptStep('priority', speech);
+  const twiml = new VoiceResponse();
+  const gather = twiml.gather({ input: 'speech', action: '/gather-income', method: 'POST', timeout: 5, speechTimeout: 'auto' });
+  gather.say({ voice: 'man', language: 'en-US' }, 'Can you share your estimated monthly or yearly household income range?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "Thank you. We'll have someone follow up shortly.");
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.post('/gather-income', (req, res) => {
+  const speech = req.body.SpeechResult || 'not captured';
   saveTranscriptStep('income', speech);
   const twiml = new VoiceResponse();
+  const gather = twiml.gather({ input: 'speech', action: '/gather-part-time-interest', method: 'POST', timeout: 5, speechTimeout: 'auto' });
+  gather.say({ voice: 'man', language: 'en-US' }, 'Would you be open to earning income part-time if it fit around your schedule?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "Got it. Thank you.");
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.post('/gather-part-time-interest', (req, res) => {
+  const speech = req.body.SpeechResult || 'not captured';
+  saveTranscriptStep('part_time_interest', speech);
+  const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/final-save', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say({ voice: 'man', language: 'en-US' }, 'How long will it take to reach that income?');
-  twiml.say({ voice: 'man', language: 'en-US' }, "We’ll circle back soon. Goodbye!");
+  gather.say({ voice: 'man', language: 'en-US' }, 'May I send you a link to book a time with me?');
+  twiml.say({ voice: 'man', language: 'en-US' }, "No problem. Have a great day.");
   res.type('text/xml').send(twiml.toString());
 });
 
 app.post('/final-save', async (req, res) => {
-  const speech = req.body.SpeechResult || 'not defined';
-  saveTranscriptStep('timeline', speech);
+  const speech = req.body.SpeechResult || 'not captured';
+  saveTranscriptStep('calendar_permission', speech);
   const phone = transcript.find(t => t.phone)?.phone || alertPhone;
   const name = transcript.find(t => t.name)?.name || 'Prospect';
   sendCalendlySMS(name, phone);
-  await new Lead({ source: 'PhoneBot', timestamp: new Date(), responses: { timeline: speech }, transcript: [...transcript] }).save();
+  await new Lead({ source: 'PhoneBot', timestamp: new Date(), responses: {}, transcript: [...transcript] }).save();
   transcript = [];
   const twiml = new VoiceResponse();
-  twiml.say({ voice: 'man', language: 'en-US' }, 'Thanks for your time. A licensed rep will follow up. Have a great day!');
+  twiml.say({ voice: 'man', language: 'en-US' }, 'Thanks again for your time. Talk soon!');
   twiml.hangup();
   res.type('text/xml').send(twiml.toString());
-});
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-app.get('/transcripts', async (req, res) => {
-  const leads = await Lead.find({}).lean();
-  res.json(leads);
 });
 
 app.listen(PORT, () => console.log(`📞 PhoneBot running on port ${PORT}`));
