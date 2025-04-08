@@ -81,9 +81,9 @@ app.post('/voice', (req, res) => {
     speechTimeout: 'auto'
   });
 
-  gather.say(`Hi ${name}, this is Isidro. You were referred by ${ref}. Do you want to save money, make money, or eliminate debt?`);
+  gather.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
 
-  twiml.say("Sorry, I didn’t hear anything. We’ll call you back soon. Goodbye!");
+  twiml.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
 
   res.type('text/xml');
   res.send(twiml.toString());
@@ -97,8 +97,8 @@ app.post('/interest', (req, res) => {
   if (speech.includes('appointment') || speech.includes('schedule')) offerCalendlyBooking(name, phone);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/goals', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say('What line of work are you in currently?');
-  twiml.say("Sorry, I didn’t catch that. We’ll follow up later.");
+  gather.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
+  twiml.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -107,8 +107,8 @@ app.post('/goals', (req, res) => {
   saveTranscriptStep('goals', speech);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/retire', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say('Is this a career or a stepping stone?');
-  twiml.say("Thank you. We’ll be in touch.");
+  gather.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
+  twiml.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -117,8 +117,8 @@ app.post('/retire', (req, res) => {
   saveTranscriptStep('retire', speech);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/income', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say('What is your ideal income?');
-  twiml.say("Got it. Thank you for your time.");
+  gather.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
+  twiml.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -127,8 +127,8 @@ app.post('/income', (req, res) => {
   saveTranscriptStep('income', speech);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/final-save', method: 'POST', timeout: 5, speechTimeout: 'auto' });
-  gather.say('How long will it take to reach that income?');
-  twiml.say("We’ll circle back soon. Goodbye!");
+  gather.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
+  twiml.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -141,7 +141,7 @@ app.post('/final-save', async (req, res) => {
   await new Lead({ source: 'PhoneBot', timestamp: new Date(), responses: { timeline: speech }, transcript: [...transcript] }).save();
   transcript = [];
   const twiml = new VoiceResponse();
-  twiml.say('Thanks for your time. A licensed rep will follow up. Have a great day!');
+  twiml.say({ voice: 'Polly.Amy', language: 'en-GB' }, { voice: 'Polly.Amy', language: 'en-GB' }, $1);
   twiml.hangup();
   res.type('text/xml').send(twiml.toString());
 });
