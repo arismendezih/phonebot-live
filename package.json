@@ -1,0 +1,27 @@
+{
+  "name": "phonebot-live",
+  "version": "1.0.0",
+  "main": "phonebot-caller-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arismendezih/phonebot-live.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arismendezih/phonebot-live/issues"
+  },
+  "homepage": "https://github.com/arismendezih/phonebot-live#readme",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.13.2",
+    "natural": "^8.0.1",
+    "twilio": "^5.5.2"
+  }
+}
