@@ -10,7 +10,6 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ENV vars (set in Render)
 const accountSid = process.env.YOUR_TWILIO_SID;
 const authToken = process.env.YOUR_TWILIO_AUTH_TOKEN;
 const twilioNumber = process.env.YOUR_TWILIO_PHONE_NUMBER;
@@ -70,23 +69,14 @@ function saveTranscriptStep(step, speech, meta = {}) {
   else if (sentiment <= -2) sendAlert(`⚠️ Negative from ${step}: ${speech}`);
 }
 
-app.post('/start-calls', (req, res) => {
-  const { callList } = req.body;
-  if (!callList || !Array.isArray(callList)) return res.status(400).send('Invalid call list');
-  callList.forEach(contact => {
-    client.calls.create({
-      url: `https://phonebot-live.onrender.com/voice?name=${contact.name}&ref=${contact.referrer}&phone=${contact.phone}`,
-      to: contact.phone,
-      from: twilioNumber
-    }).catch(console.error);
-  });
-  res.send('Batch started');
-});
-
 app.post('/voice', (req, res) => {
   const { name = 'there', ref = 'a friend', phone = '' } = req.query;
   const twiml = new VoiceResponse();
-  const gather = twiml.gather({ input: 'speech', action: `/interest?name=${name}&phone=${phone}`, method: 'POST' });
+  const gather = twiml.gather({
+    input: 'speech',
+    action: `https://phonebot-live.onrender.com/interest?name=${name}&phone=${phone}`,
+    method: 'POST'
+  });
   gather.say(`Hi ${name}, this is Isidro. You were referred by ${ref}. Do you want to save money, make money, or eliminate debt?`);
   res.type('text/xml').send(twiml.toString());
 });
@@ -108,7 +98,7 @@ app.post('/goals', (req, res) => {
   saveTranscriptStep('goals', speech);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/retire', method: 'POST' });
-  gather.say('Is this a career or just a stepping stone for something else?');
+  gather.say('Is this a career or a stepping stone?');
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -117,7 +107,7 @@ app.post('/retire', (req, res) => {
   saveTranscriptStep('retire', speech);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/income', method: 'POST' });
-  gather.say('What would your ideal income be to reach your goals?');
+  gather.say('What is your ideal income?');
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -126,7 +116,7 @@ app.post('/income', (req, res) => {
   saveTranscriptStep('income', speech);
   const twiml = new VoiceResponse();
   const gather = twiml.gather({ input: 'speech', action: '/final-save', method: 'POST' });
-  gather.say('How long will it take your current job to reach that income level?');
+  gather.say('How long will it take to reach that income?');
   res.type('text/xml').send(twiml.toString());
 });
 
@@ -136,12 +126,7 @@ app.post('/final-save', async (req, res) => {
   const phone = transcript.find(t => t.phone)?.phone || alertPhone;
   const name = transcript.find(t => t.name)?.name || 'Prospect';
   sendCalendlySMS(name, phone);
-  await new Lead({
-    source: 'PhoneBot',
-    timestamp: new Date(),
-    responses: { timeline: speech },
-    transcript: [...transcript]
-  }).save();
+  await new Lead({ source: 'PhoneBot', timestamp: new Date(), responses: { timeline: speech }, transcript: [...transcript] }).save();
   transcript = [];
   const twiml = new VoiceResponse();
   twiml.say('Thanks for your time. A licensed rep will follow up. Have a great day!');
